@@ -1,0 +1,49 @@
+!pip -q install --no-deps langchain langchain-community langchain-text-splitters
+!pip -q install faiss-cpu pypdf sentence-transformers transformers accelerate
+
+from google.colab import files
+uploaded = files.upload()
+
+
+from langchain_community.document_loaders import PyPDFLoader
+import os
+
+pdf_file = list(uploaded.keys())[0]   # picks the uploaded PDF automatically
+loader = PyPDFLoader(pdf_file)
+docs = loader.load()
+
+print("Total pages loaded:", len(docs))
+print("Sample text:\n", docs[0].page_content[:500])
+
+
+from langchain_text_splitters import RecursiveCharacterTextSplitter
+
+text_splitter = RecursiveCharacterTextSplitter(
+    chunk_size=800,
+    chunk_overlap=150
+)
+
+chunks = text_splitter.split_documents(docs)
+print("Total chunks created:", len(chunks))
+print("Sample chunk:\n", chunks[0].page_content[:400])
+
+
+from langchain_community.embeddings import HuggingFaceEmbeddings
+
+embedding_model = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
+
+
+from langchain_community.vectorstores import FAISS
+
+db = FAISS.from_documents(chunks, embedding_model)
+print("FAISS vector store created successfully!")
+
+from transformers import pipeline
+
+qa_pipeline = pipeline(
+    "text2text-generation",
+    model="google/flan-t5-base",
+    max_new_tokens=256
+)
+
+print("LLM loaded successfully!")
