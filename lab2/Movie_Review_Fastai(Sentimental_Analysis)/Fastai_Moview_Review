@@ -1,0 +1,93 @@
+# Install required libraries (run once)
+!pip install fastai datasets transformers sentence-transformers --quiet
+
+# Core imports
+from datasets import load_dataset
+from fastai.text.all import *
+import pandas as pd
+
+
+# Load IMDb dataset from Hugging Face
+ds = load_dataset("imdb")
+print(ds)
+# Use smaller subsets to run faster
+small_train = ds['train'].shuffle(seed=42).select(range(4000))
+small_test  = ds['test'].shuffle(seed=42).select(range(2000))
+
+# Convert to DataFrame
+train_df = pd.DataFrame(small_train)
+test_df  = pd.DataFrame(small_test)
+
+print(train_df.head())
+# Create DataLoaders
+dls = TextDataLoaders.from_df(
+    train_df,
+    text_col='text',
+    label_col='label',
+    valid_pct=0.1,
+    bs=32
+)
+
+dls.show_batch(max_n=2)
+# Create text classification learner
+learn = text_classifier_learner(
+    dls,
+    AWD_LSTM,
+    drop_mult=0.5,
+    metrics=accuracy
+)
+
+
+# Disable problematic progress bar (Colab fix)
+from fastai.callback.progress import ProgressCallback
+learn.remove_cb(ProgressCallback)
+
+
+# Train for 1 epoch (lab demo)
+learn.fine_tune(1)
+
+
+# Validate accuracy
+learn.validate()
+
+
+# Predict sentiment for a custom review
+text = "This movie was absolutely fantastic with great acting."
+pred, pred_idx, probs = learn.predict(text)
+
+print("Review:", text)
+print("Predicted Label:", pred)
+print("Probabilities:", probs)
+!pip install gradio --quiet
+
+import gradio as gr
+from fastai.text.all import load_learner
+
+# Load your trained FastAI model (exported earlier)
+learn = load_learner('export.pkl')
+
+# Define prediction function
+def predict_sentiment(text):
+    pred, pred_idx, probs = learn.predict(text)
+    return f"**Sentiment:** {pred}\n**Probabilities:** {probs}"
+
+# Sample reviews for radio buttons
+sample_reviews = [
+    "This movie was absolutely fantastic with great acting.",
+    "I hated this movie. It was a complete waste of time.",
+    "The plot was okay, but the acting was terrible.",
+    "An amazing cinematic experience! Truly loved it.",
+    "Not bad, but could have been much better."
+]
+
+# Create Gradio interface using radio buttons
+iface = gr.Interface(
+    fn=predict_sentiment,
+    inputs=gr.Radio(choices=sample_reviews, label="Select a movie review"),
+    outputs="text",
+    title="IMDb Movie Review Sentiment Classifier",
+    description="Select a review from the options and see the predicted sentiment."
+)
+
+# Launch the UI
+iface.launch()
