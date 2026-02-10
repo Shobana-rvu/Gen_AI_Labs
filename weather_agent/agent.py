@@ -3,6 +3,7 @@ from dotenv import load_dotenv
 from langchain_groq import ChatGroq
 from langchain_core.prompts import ChatPromptTemplate
 from weather_tool import get_weather
+import streamlit as st
 
 load_dotenv()
 
