@@ -3,12 +3,23 @@ import json
 import os
 from dotenv import load_dotenv
 import streamlit as st
-from groq import GroqClient
+from groq import Groq
 
-load_dotenv()
-
+# Read from Streamlit secrets
 GROQ_API_KEY = st.secrets["GROQ_API_KEY"]
-client = GroqClient(api_key=GROQ_API_KEY)
+
+# Initialize Groq client
+client = Groq(api_key=GROQ_API_KEY)
+
+# Example usage
+response = client.chat.completions.create(
+    model="openai/gpt-oss-20b",
+    messages=[{"role": "user", "content": "Hello Groq!"}]
+)
+
+st.write(response.choices[0].message.content)
+
+
 
 
 SYSTEM_PROMPT = """
