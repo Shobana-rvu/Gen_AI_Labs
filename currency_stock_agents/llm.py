@@ -2,10 +2,14 @@ from groq import Groq
 import json
 import os
 from dotenv import load_dotenv
+import streamlit as st
+from groq import GroqClient
 
 load_dotenv()
 
-client = Groq(api_key=os.getenv("GROQ_API_KEY"))
+GROQ_API_KEY = st.secrets["GROQ_API_KEY"]
+client = GroqClient(api_key=GROQ_API_KEY)
+
 
 SYSTEM_PROMPT = """
 You are a financial research agent.
