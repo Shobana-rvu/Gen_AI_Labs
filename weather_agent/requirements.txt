@@ -4,3 +4,6 @@ langchain-groq
 langchainhub
 python-dotenv
 requests
+groq
+yfinance
+python-dotenv
