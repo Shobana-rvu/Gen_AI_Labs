@@ -1,7 +1,7 @@
 import requests
 import os
 
-OPENWEATHER_API_KEY = os.getenv("OPENWEATHER_API_KEY")
+OPENWEATHER_API_KEY = st.secrets["OPENWEATHER_API_KEY"]
 
 def get_weather(city: str):
     url = f"https://api.openweathermap.org/data/2.5/forecast?q={city}&appid={OPENWEATHER_API_KEY}&units=metric"
